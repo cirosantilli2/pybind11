@@ -161,6 +161,19 @@ add_library(pybind11::headers ALIAS pybind11_headers) # easier to use/remember
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/tools/pybind11Common.cmake")
 
+option(PYBIND11_PRECOMPILE "Precompile parts of pybind11" ON)
+if(PYBIND11_PRECOMPILE)
+  file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/include/pybind11/*.cpp)
+  # Produce libpybind11.a, which contains position independent object files.
+  # that may be used to create a shared library.
+  add_library(pybind11_lib STATIC ${SOURCES} ${PYBIND11_HEADERS})
+  set_property(TARGET pybind11_lib PROPERTY POSITION_INDEPENDENT_CODE ON)
+  target_compile_definitions(pybind11_lib PUBLIC -DPYBIND11_DECLARATIONS_ONLY=1)
+  add_library(pybind11::lib ALIAS pybind11_lib)
+  target_link_libraries(pybind11_lib PRIVATE pybind11::pybind11)
+  target_link_libraries(pybind11_lib PUBLIC pybind11::headers)
+endif()
+
 if(NOT PYBIND11_MASTER_PROJECT AND NOT pybind11_FIND_QUIETLY)
   message(STATUS "Using pybind11: (version \"${pybind11_VERSION}\" ${pybind11_VERSION_TYPE})")
 endif()
@@ -269,12 +282,3 @@ if(NOT PYBIND11_MASTER_PROJECT)
       "${PYBIND11_INCLUDE_DIR}"
       CACHE INTERNAL "Directory where pybind11 headers are located")
 endif()
-
-find_package (Python3 COMPONENTS Development)
-include_directories(${Python3_INCLUDE_DIRS})
-add_definitions(-DPYBIND11_DECLARATIONS_ONLY=1)
-file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/include/pybind11/*.cpp )
-# Produce libpybind11.a, which contains position independent object files.
-# that may be used to create a shared library.
-add_library(pybind11 STATIC ${SOURCES})
-set_property(TARGET pybind11 PROPERTY POSITION_INDEPENDENT_CODE ON)

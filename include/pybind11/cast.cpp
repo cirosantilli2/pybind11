@@ -560,4 +560,3 @@ PYBIND11_INLINE constexpr arg operator"" _a(const char *name, size_t) { return a
 }
 
 PYBIND11_NAMESPACE_END(PYBIND11_NAMESPACE)
-
